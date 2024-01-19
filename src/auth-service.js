@@ -1,21 +1,21 @@
-import  axios from './lib/axios';
+import  { axiosCreator } from './lib/axios';
 import {clearFeedback, showError, showSuccess } from './lib/feedback';
 
-const csrf = () => axios.get('/sanctum/csrf-cookie');
+let currentToken = '';
 
 const register = async (e) => {
   e.preventDefault();
   clearFeedback();
-  await csrf();
   const formData = new FormData(registerForm);
+  let axios = axiosCreator();
   axios
-    .post('/register', formData)
+    .post('/api/auth/register', formData)
     .then(( response ) => {
       if(response.data?.error) {
         showError(response.data.error);
       } else {
         showSuccess('Your account has been created!');
-
+        currentToken = response.data.token;
       }
       //checkAuth();
     })
@@ -32,7 +32,7 @@ registerForm.addEventListener('submit', register);
 const checkAuth = async () => {
   clearFeedback();
   showSuccess('Checking auth...');
-  await csrf();
+  let axios = axiosCreator(currentToken);
   axios
     .get('/api/user',{withCredentials: true})
     .then((response) => {
